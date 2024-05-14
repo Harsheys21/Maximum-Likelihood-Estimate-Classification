@@ -1,4 +1,4 @@
-from nltk.tokenize import regexp_tokenize
+#from nltk.tokenize import regexp_tokenize
 import numpy as np
 import re
 

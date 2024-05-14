@@ -52,6 +52,7 @@ class MaximumLikelihoodEstimateUnigram(BinaryClassifier): # Maximum Likelihood E
 
         prob_list = sum_list / sum
 
+        
         return prob_list
 
 
@@ -105,3 +106,20 @@ class MaximumLikelihoodEstimateUnigram(BinaryClassifier): # Maximum Likelihood E
 
 
         return predictions
+    
+class MaximumLikelihoodEstimateBigram(BinaryClassifier): # Maximum Likelihood Estimate
+    
+    def __init__(self):
+        self.frequency_list = None
+
+    def fit(self, transformed_list):
+        return 0
+    
+
+class MaximumLikelihoodEstimateTrigram(BinaryClassifier): # Maximum Likelihood Estimate
+    
+    def __init__(self):
+        self.frequency_list = None
+
+    def fit(self, transformed_list):
+        return 0

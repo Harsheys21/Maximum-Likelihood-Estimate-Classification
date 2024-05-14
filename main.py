@@ -85,11 +85,11 @@ def main():
         model.fit(X_train)
 
     # output accuracy
-    print("===== Train Accuracy =====")
-    accuracy(model.predict(X_train))
+    # print("===== Train Accuracy =====")
+    # accuracy(model.predict(X_train))
     
-    print("===== Test Accuracy =====")
-    accuracy(model.predict(X_test))
+    # print("===== Test Accuracy =====")
+    # accuracy(model.predict(X_test))
 
     print("Time for training and test: %.2f seconds" % (time.time() - start_time))
 
