@@ -30,7 +30,7 @@ class BinaryClassifier(object):
         pass
 
 # TODO: Implement this
-class MaximumLikelihoodEstimate(BinaryClassifier): # Maximum Likelihood Estimate
+class MaximumLikelihoodEstimateUnigram(BinaryClassifier): # Maximum Likelihood Estimate
     """Naive Bayes Classifier
     """
     def __init__(self):

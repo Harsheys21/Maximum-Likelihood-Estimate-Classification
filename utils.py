@@ -17,7 +17,6 @@ def tokenize(text, pattern = default_pattern):
     Returns:
         list -- list of tokenized words, such as ['I', 'love', 'nlp']
     """
-    text = text.lower()
     tokens = text.split()
     return tokens
 
@@ -50,18 +49,18 @@ class UnigramFeature(FeatureExtractor):
             text_set {list} -- list of tokenized sentences and words are lowercased, such as [["I", "love", "nlp"], ["I", "like", "python"]]
         """
         # add start token
-        token_count = {}
+        token_count = {} 
 
         index = 0
 
         for i in range(0, len(text_set)):
             for j in range(0, len(text_set[i])):
-                if text_set[i][j].lower() not in self.unigram:
-                    self.unigram[text_set[i][j].lower()] = index
+                if text_set[i][j] not in self.unigram:
+                    self.unigram[text_set[i][j]] = index
                     index += 1
-                    token_count[text_set[i][j].lower()] = 1
+                    token_count[text_set[i][j]] = 1
                 else:
-                    token_count[text_set[i][j].lower()] += 1
+                    token_count[text_set[i][j]] += 1
 
         # add unc tokens
         for token, count in token_count.items():
@@ -89,14 +88,14 @@ class UnigramFeature(FeatureExtractor):
             text {list} -- a tokenized sentence (list of words), such as ["I", "love", "nlp"]
         
         Returns:
-            array -- an unigram feature array, such as array([1,1,1,0,0])
+            array -- an unigram feature array, such as array([1,1,1,0,0]) 
         """
         feature = np.zeros(len(self.unigram))
         # set start token
 
         for i in range(0, len(text)):
-            if text[i].lower() in self.unigram:
-                feature[self.unigram[text[i].lower()]] += 1
+            if text[i] in self.unigram:
+                feature[self.unigram[text[i]]] += 1
             else:
                 feature[self.unigram["<UNK>"]] += 1
 
@@ -135,7 +134,7 @@ class BigramFeature(FeatureExtractor):
 
         for i in range(len(text_set)):
             for j in range(len(text_set[i]) - 1):  # Adjusted range to consider bigrams
-                bigram = (text_set[i][j].lower(), text_set[i][j + 1].lower())
+                bigram = (text_set[i][j], text_set[i][j + 1])
                 if bigram not in self.bigram:
                     self.bigram[bigram] = index
                     token_count[bigram] = 1
@@ -156,18 +155,23 @@ class BigramFeature(FeatureExtractor):
         # add stop token
         self.bigram["<STOP>"] = index
 
+        index = 0
+        for key in self.bigram.keys():
+            self.bigram[key] = index
+            index += 1
+
 
     def transform(self, text: list):
         feature = np.zeros(len(self.bigram))
         for i in range(len(text) - 1):  # Adjusted range to consider bigrams
-            bigram = (text[i].lower(), text[i + 1].lower())
+            bigram = (text[i], text[i + 1])
             if bigram in self.bigram:
                 feature[self.bigram[bigram]] += 1
             else:
                 feature[self.bigram["<UNK>"]] += 1
         
         # set stop token
-        feature[self.unigram['<STOP>']] = 1
+        feature[self.bigram['<STOP>']] = 1
         return feature
     
     def transform_list(self, text_set: list):
@@ -191,7 +195,7 @@ class TrigramFeature(FeatureExtractor):
 
         for i in range(len(text_set)):
             for j in range(len(text_set[i]) - 2):  # Adjusted range to consider bigrams
-                trigram = (text_set[i][j].lower(), text_set[i][j + 1].lower(), text_set[i][j + 2].lower())
+                trigram = (text_set[i][j], text_set[i][j + 1], text_set[i][j + 2])
                 if trigram not in self.trigram:
                     self.trigram[trigram] = index
                     token_count[trigram] = 1
@@ -212,18 +216,23 @@ class TrigramFeature(FeatureExtractor):
         # add stop token
         self.trigram["<STOP>"] = index
 
+        index = 0
+        for key in self.trigram.keys():
+            self.trigram[key] = index
+            index += 1
+
 
     def transform(self, text: list):
         feature = np.zeros(len(self.trigram))
         for i in range(len(text) - 2):  # Adjusted range to consider bigrams
-            trigram = (text[i].lower(), text[i + 1].lower(), text[i + 2].lower())
+            trigram = (text[i], text[i + 1], text[i + 2])
             if trigram in self.trigram:
                 feature[self.trigram[trigram]] += 1
             else:
                 feature[self.trigram["<UNK>"]] += 1
         
         # set stop token
-        feature[self.unigram['<STOP>']] = 1
+        feature[self.trigram['<STOP>']] = 1
         return feature
     
     def transform_list(self, text_set: list):
