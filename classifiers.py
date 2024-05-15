@@ -39,6 +39,7 @@ class MaximumLikelihoodEstimateUnigram(BinaryClassifier): # Maximum Likelihood E
         # initialize vocab size, likelihood, and prior belief values
         self.vocab_size = None
         self.frequency_list = None
+        self.vocab_size = None
         #self.likelihood = None
         #self.prior = None
         
@@ -48,9 +49,9 @@ class MaximumLikelihoodEstimateUnigram(BinaryClassifier): # Maximum Likelihood E
 
 
         sum_list = np.sum(transformed_list, axis = 0)
-        sum = np.sum(sum_list)
+        self.vocab_size = np.sum(sum_list)
 
-        prob_list = sum_list / sum
+        prob_list = sum_list / self.vocab_size
 
         
         return prob_list
@@ -93,6 +94,16 @@ class MaximumLikelihoodEstimateUnigram(BinaryClassifier): # Maximum Likelihood E
 
         predictions = []
 
+        inv_M = 1/self.vocab_size
+
+        log_prob = np.log2(X)
+
+        exponent_l = inv_M * np.sum(log_prob)
+
+        return 2 ** -(exponent_l)
+
+
+
         # for instance in X:
         #     log_p = np.zeros(2)
 
@@ -103,9 +114,6 @@ class MaximumLikelihoodEstimateUnigram(BinaryClassifier): # Maximum Likelihood E
         #     # pick the largest value out of the two classes and append to predictions
         #     label = np.argmax(log_p)
         #     predictions.append(label)
-
-
-        return predictions
     
 class MaximumLikelihoodEstimateBigram(BinaryClassifier): # Maximum Likelihood Estimate
     
