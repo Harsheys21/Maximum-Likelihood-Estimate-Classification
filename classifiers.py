@@ -34,14 +34,10 @@ class MaximumLikelihoodEstimateUnigram(BinaryClassifier): # Maximum Likelihood E
     """Naive Bayes Classifier
     """
     def __init__(self):
-        # Add your code here!
-        # sum ranges or denominator isn't needed
-        # initialize vocab size, likelihood, and prior belief values
         self.vocab_size = None
         self.frequency_list = None
-        self.N = None
-        #self.likelihood = None
-        #self.prior = None
+        self.vocab_size = None
+        self.prob_list = None
         
 
     def fit(self, transformed_list):
@@ -49,71 +45,30 @@ class MaximumLikelihoodEstimateUnigram(BinaryClassifier): # Maximum Likelihood E
 
 
         sum_list = np.sum(transformed_list, axis = 0)
-        self.N = np.sum(sum_list)
+        self.vocab_size = np.sum(sum_list)
 
-        prob_list = sum_list / self.N
-
-        
-        return prob_list
-
+        self.prob_list = sum_list / self.vocab_size
 
         
-
-
-
-
-
-
-        # set X and Y to numpy arrays
-        # X = np.array(X)
-        # Y - np.array(Y)
-
-        # # get the vocab size
-        # self.vocab_size = X.shape[1]
-
-        # # get the prior probability
-        # self.prior = np.zeros(2)
-        # for i in range(2):
-        #     # np.sum(Y == i) get the instances that match the class
-        #     # len(Y) gets total length of values
-        #     self.prior[i] = np.sum(Y == i)/len(Y)
-
-        # # now calculate the likelihood
-        # self.likelihood = np.zeros((2, self.vocab_size))
-        # for label in range(2):
-        #     # Select only instances with the current label
-        #     X_label = X[Y == label]
-        #     # Calculate word counts for each feature
-        #     word_counts = np.sum(X_label, axis=0)
-        #     # Calculate likelihood with add-1 smoothing
-        #     self.likelihood[label] = (word_counts + 1) / (np.sum(X_label) + self.vocab_size)
+        #return prob_list
     
-    def predict(self, X):
-        # Add your code here!
-        # X = np.array(X)
+    def perplexity(self, X):
+        # 
+        # X should be tokenized data to get perplextiy score on
 
-        predictions = []
+        data_probabilites = []
+        
+        #retrieve the probabilities of the data
+        for item in X:
+            data_probabilites.append(self.prob_list[item])
 
-        # inv_M = 1/self.N
+        inv_M = 1/3 # 1/3 because 3 tokens in corpus. Should be changed to variable later
 
-        # log_prob = np.log2(X)
+        log_prob = np.log2(data_probabilites)
 
-        # exponent_l = inv_M * np.sum(log_prob)
+        exponent_l = inv_M * np.sum(log_prob)
 
-        return 0#2 ** -(exponent_l)
-
-
-
-        # for instance in X:
-        #     log_p = np.zeros(2)
-
-        #     for i in range(2):
-        #         # calculate the log value
-        #         log_p[i] = np.log(self.prior[i]) + np.sum(np.log(self.likelihood[i]) * instance)
-
-        #     # pick the largest value out of the two classes and append to predictions
-        #     label = np.argmax(log_p)
-        #     predictions.append(label)
+        return 2 ** -(exponent_l)
     
 class MaximumLikelihoodEstimateBigram(BinaryClassifier): # Maximum Likelihood Estimate
     

@@ -82,14 +82,20 @@ def main():
     if args.feature != 'unigram':
         model.fit(X_train, X_train_b)
     else:
-        probabilities = model.fit(X_train)
+        model.fit(X_train)
+
 
     # output accuracy
-    print("===== Train Accuracy =====")
-    #accuracy(model.predict(X_train))
+    print("===== Unigram Perplexity Score =====")
+    with open('test.txt', 'r') as f:
+        test_text = [tokenize(line) for line in f.readlines()]
+        test_text[0].append("<STOP>")
+        indices = []
+        for item in test_text[0]:
+            indices.append(feat_extractor.unigram.get(item))
+        print(model.perplexity(indices))
     
-    print("===== Test Accuracy =====")
-    #accuracy(model.predict(X_test))
+    #print("===== Test Accuracy =====")
 
     print("Time for training and test: %.2f seconds" % (time.time() - start_time))
 
