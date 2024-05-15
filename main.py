@@ -82,14 +82,14 @@ def main():
     if args.feature != 'unigram':
         model.fit(X_train, X_train_b)
     else:
-        model.fit(X_train)
+        probabilities = model.fit(X_train)
 
     # output accuracy
     print("===== Train Accuracy =====")
-    accuracy(model.predict(X_train))
+    #accuracy(model.predict(X_train))
     
     print("===== Test Accuracy =====")
-    accuracy(model.predict(X_test))
+    #accuracy(model.predict(X_test))
 
     print("Time for training and test: %.2f seconds" % (time.time() - start_time))
 
