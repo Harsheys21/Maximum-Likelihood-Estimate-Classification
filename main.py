@@ -15,11 +15,11 @@ def accuracy(pred, labels):
 def read_data(path):
     #train_frame = pd.read_csv(path + '1b_benchmark.train.tokens')
 
-    train_frame = open(path + '1b_benchmark.train.tokens', encoding='utf8')
+    train_frame = open(path + '1b_benchmark.train.tokens', 'r', encoding='utf-8')
 
     try:
         #test_frame = pd.read_csv(path + '1b_benchmark.dev.tokens')
-        test_frame = open(path + '1b_benchmark.dev.tokens')
+        test_frame = open(path + '1b_benchmark.dev.tokens', 'r', encoding='utf-8')
     except FileNotFoundError:
         test_frame = train_frame
 
