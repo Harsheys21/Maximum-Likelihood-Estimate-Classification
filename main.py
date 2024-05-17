@@ -1,5 +1,4 @@
 import pandas as pd
-from classifiers import *
 from utils import *
 import numpy as np
 import time
@@ -46,13 +45,10 @@ def main():
     # determine which feature extractor to use
     if args.feature == "unigram":
         feat_extractor = UnigramFeature()
-        model = MaximumLikelihoodEstimateUnigram()
     elif args.feature == "bigram":
         feat_extractor = BigramFeature()
-        model = MaximumLikelihoodEstimateBigram()
     elif args.feature == "trigram":
         feat_extractor = TrigramFeature()
-        model = MaximumLikelihoodEstimateTrigram()
     else:
         raise Exception("Pass unigram, bigram, or trigram to --feature")
 

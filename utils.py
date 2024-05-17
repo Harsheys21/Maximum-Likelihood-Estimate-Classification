@@ -203,7 +203,7 @@ class BigramFeature(FeatureExtractor):
                 unk_value += 1
         
         if unk_value > 0:
-            feature[('UNK','UNK')] = unk_value
+            feature[('<UNK>','<UNK>')] = unk_value
 
         return feature
     
@@ -227,55 +227,117 @@ class BigramFeature(FeatureExtractor):
 class TrigramFeature(FeatureExtractor):
 
     def __init__(self):
-        self.trigram = {}
-        self.special_tokens = {'<START>', '<STOP>', '<UNK>'}
+        self.trigram = set()
+        self.bigram = set()
+        self.unigram = {'<UNK>', '<STOP>', '<START>'}
+        self.prob = {}
         
     def fit(self, text_set: list):
-        # add start token
-        token_count = {}
+        # add start token 
+        unigram_count = {}
 
-        index = 0
+        for sentence in text_set:
+            for token in sentence:
+                unigram_count[token] = unigram_count.get(token,0) + 1
+                self.unigram.add(token)
+            unigram_count['<STOP>'] = unigram_count.get('<STOP>', 0) + 1
 
-        for i in range(len(text_set)):
-            for j in range(len(text_set[i]) - 2):  # Adjusted range to consider bigrams
-                trigram = (text_set[i][j], text_set[i][j + 1], text_set[i][j + 2])
-                if trigram not in self.trigram:
-                    self.trigram[trigram] = index
-                    token_count[trigram] = 1
-                    index += 1
-                else:
-                    token_count[trigram] += 1
-
-        # add unc token
-        for token, count in token_count.items():
-            if count < 3:
-                if self.trigram.get("<UNK>") == None:
-                    self.trigram['<UNK>'] = index
-                    index += 1
-                    self.trigram.pop(token)
-                else:
-                    self.trigram.pop(token)
+        unk_value = 0
         
-        # add stop token
-        self.trigram["<STOP>"] = index
+        for token in unigram_count.keys():
+            if token != "<STOP>" and unigram_count[token] < 3:
+                self.unigram.remove(token)
+                unk_value += unigram_count[token]
 
-        index = 0
-        for key in self.trigram.keys():
-            self.trigram[key] = index
-            index += 1
+        if unk_value > 0:
+            unigram_count['<UNK>'] = unk_value
+
+        unigram_count['<START>'] = unigram_count['<STOP>']
+        bigram_count = {}
+        
+        for sentence in text_set:
+            sentence.insert(0, '<START>')
+            sentence.append('<STOP>')
+            for j in range(len(sentence) - 1):  # Adjusted range to consider bigrams
+                if sentence[j] in self.unigram:
+                    word_a =  sentence[j]
+                else:
+                    word_a = '<UNK>'
+                
+                if sentence[j+1] in self.unigram:
+                    word_b =  sentence[j+1]
+                else:
+                    word_b = '<UNK>'
+
+                bigram = (word_a, word_b)
+                bigram_count[bigram] = bigram_count.get(bigram, 0) + 1
+                self.bigram.add(bigram)
+
+        trigram_count = {}
+        
+        for sentence in text_set:
+            sentence.insert(0,'<START>')
+            for j in range(len(sentence) - 2):  # Adjusted range to consider bigrams
+                if sentence[j] in self.unigram:
+                    word_a =  sentence[j]
+                else:
+                    word_a = '<UNK>'
+                
+                if sentence[j+1] in self.unigram:
+                    word_b =  sentence[j+1]
+                else:
+                    word_b = '<UNK>'
+
+                if sentence[j+2] in self.unigram:
+                    word_c =  sentence[j+2]
+                else:
+                    word_c = '<UNK>'
+
+                trigram = (word_a, word_b, word_c)
+                trigram_count[trigram] = trigram_count.get(trigram, 0) + 1
+                self.trigram.add(trigram)
+        
+        for word in self.trigram:
+            self.prob[word] = trigram_count[word] / bigram_count[(word[0], word[1])]
 
 
     def transform(self, text: list):
-        feature = np.zeros(len(self.trigram))
+        # create a 2d numpy array that contains numerator and denominator count of word
+        feature = {}
+
+        unk_value = 0
+        text.insert(0, '<START>')
+        text.append("<STOP>")
         for i in range(len(text) - 2):  # Adjusted range to consider bigrams
-            trigram = (text[i], text[i + 1], text[i + 2])
-            feature[self.trigram.get(trigram, self.trigram["<UNK>"])] += 1
+            trigram = (text[i], text[i + 1], text[i+2])
+            if trigram in self.trigram:
+                if trigram in feature:
+                    feature[trigram] += 1
+                else:
+                    feature[trigram] = 1
+            else:
+                unk_value += 1
         
-        # set stop token
-        feature[self.trigram['<STOP>']] = 1
+        if unk_value > 0:
+            feature[('<UNK>','<UNK>','<UNK>')] = unk_value
+
         return feature
     
     def transform_list(self, text_set: list):
         features = [self.transform(text) for text in text_set]
         return features
+
+    def perplexity(self, features):
+        logSum = 0
+        totalWords = 0
+        for line in features:
+            for word in line:
+                logSum += np.log2(line[word] * self.prob[word])
+                totalWords += line[word]
+        print(f"{logSum=}")
+        print(f"{totalWords=}")
+        sol = 2 ** (-logSum/totalWords)
+        
+        return sol
+
 
