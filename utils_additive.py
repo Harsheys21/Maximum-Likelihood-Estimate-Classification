@@ -5,6 +5,9 @@ import re
 # Here is a default pattern for tokenization, you can substitute it with yours
 default_pattern =  r'\s+'
 
+# additive smoothing value
+smoothing = 0.1
+
 def tokenize(text, pattern = default_pattern):
     """Tokenize senten with specific pattern
     
@@ -45,6 +48,7 @@ class UnigramFeature(FeatureExtractor):
     def __init__(self):
         self.unigram = {'<UNK>', '<STOP>'}
         self.prob = {}
+        self.vocab_size = None
         
     def fit(self, text_set: list):
         """Fit a feature extractor based on given data 
@@ -75,8 +79,11 @@ class UnigramFeature(FeatureExtractor):
         for word in self.unigram:
             total += token_count[word]
 
+        self.vocab_size = len(self.unigram)
+
         for word in self.unigram:
-            self.prob[word] = token_count[word] / total
+            self.prob[word] = (token_count[word] + smoothing) / (total + (smoothing * self.vocab_size))
+
 
     def transform(self, text: list):
         """Transform a given sentence into vectors based on the extractor you got from self.fit()
@@ -137,6 +144,7 @@ class BigramFeature(FeatureExtractor):
         self.bigram = set()
         self.unigram = {'<UNK>', '<STOP>', '<START>'}
         self.prob = {}
+        self.vocab_size = 0
         
     def fit(self, text_set: list):
         # add start token 
@@ -164,7 +172,7 @@ class BigramFeature(FeatureExtractor):
         for sentence in text_set:
             sentence.insert(0, '<START>')
             sentence.append('<STOP>')
-            for j in range(len(sentence) - 1):  
+            for j in range(len(sentence) - 1):  # Adjusted range to consider bigrams
                 if sentence[j] in self.unigram:
                     word_a =  sentence[j]
                 else:
@@ -179,8 +187,10 @@ class BigramFeature(FeatureExtractor):
                 bigram_count[bigram] = bigram_count.get(bigram, 0) + 1
                 self.bigram.add(bigram)
         
+        self.vocab_size = len(self.bigram)
+
         for word in self.bigram:
-            self.prob[word] = bigram_count[word] / unigram_count[word[0]]
+            self.prob[word] = (bigram_count[word] + smoothing) / (unigram_count[word[0]] + (smoothing * self.vocab_size))
 
 
     def transform(self, text: list):
@@ -227,6 +237,7 @@ class TrigramFeature(FeatureExtractor):
         self.bigram = set()
         self.unigram = {'<UNK>', '<STOP>', '<START>'}
         self.prob = {}
+        self.vocab_size = 0
         
     def fit(self, text_set: list):
         # add start token 
@@ -293,11 +304,13 @@ class TrigramFeature(FeatureExtractor):
                 trigram_count[trigram] = trigram_count.get(trigram, 0) + 1
                 self.trigram.add(trigram)
         
+        self.vocab_size = len(self.trigram)
+
         for word in self.trigram:
             if word[0] == '<START>' and word[1] == '<START>':
-                self.prob[word] = bigram_count[(word[1],word[2])]/unigram_count[word[1]]
+                self.prob[word] = (bigram_count[(word[1],word[2])] + smoothing)/(unigram_count[word[1]] + (smoothing * self.vocab_size))
             else:
-                self.prob[word] = trigram_count[word] / bigram_count[(word[0], word[1])]
+                self.prob[word] = (trigram_count[word] + smoothing) / (bigram_count[(word[0], word[1])] + (smoothing * self.vocab_size))
 
 
     def transform(self, text: list):

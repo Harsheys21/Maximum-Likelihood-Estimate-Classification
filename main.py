@@ -80,29 +80,28 @@ def main():
 
     test = True #change value to enable/disable hdtv . test file
 
-    if (test):
-        with open('test.txt', 'r') as f:
-            test_text = [tokenize(line) for line in f.readlines()]
-            indices = feat_extractor.transform_list(test_text)
-            print("test perplexity:", feat_extractor.perplexity(indices))
-            return
+    # if (test):
+    #     with open('test.txt', 'r') as f:
+    #         test_text = [tokenize(line) for line in f.readlines()]
+    #         indices = feat_extractor.transform_list(test_text)
+    #         print("train perplexity:", feat_extractor.perplexity(indices))
+    #         return
     # output accuracy
-    if (not interpolation):
-        print("===== %s Perplexity Scores =====" % args.feature)
-        with open('data/1b_benchmark.train.tokens', 'r') as f:
-            test_text = [tokenize(line) for line in f.readlines()]
-            indices = feat_extractor.transform_list(test_text)
-            print("train perplexity:", feat_extractor.perplexity(indices))
+    print("===== %s Perplexity Scores =====" % args.feature)
+    with open('data/1b_benchmark.train.tokens', 'r') as f:
+        test_text = [tokenize(line) for line in f.readlines()]
+        indices = feat_extractor.transform_list(test_text)
+        print("train perplexity:", feat_extractor.perplexity(indices))
 
-        with open('data/1b_benchmark.dev.tokens', 'r') as f:
-            test_text = [tokenize(line) for line in f.readlines()]
-            indices = feat_extractor.transform_list(test_text)
-            print("dev perplexity:", feat_extractor.perplexity(indices))
+    with open('data/1b_benchmark.dev.tokens', 'r') as f:
+        test_text = [tokenize(line) for line in f.readlines()]
+        indices = feat_extractor.transform_list(test_text)
+        print("dev perplexity:", feat_extractor.perplexity(indices))
 
-        with open('data/1b_benchmark.test.tokens', 'r') as f: # ONLY UNCOMMENT ON FINAL RUN
-            test_text = [tokenize(line) for line in f.readlines()]
-            indices = feat_extractor.transform_list(test_text)
-            print("test perplexity:", feat_extractor.perplexity(indices))
+    with open('data/1b_benchmark.test.tokens', 'r') as f: # ONLY UNCOMMENT ON FINAL RUN
+         test_text = [tokenize(line) for line in f.readlines()]
+         indices = feat_extractor.transform_list(test_text)
+         print("test perplexity:", feat_extractor.perplexity(indices))
 
     if (interpolation):
         y1 = 0.6
