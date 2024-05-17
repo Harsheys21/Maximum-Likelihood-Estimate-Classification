@@ -136,34 +136,53 @@ class UnigramFeature(FeatureExtractor):
 class BigramFeature(FeatureExtractor):
 
     def __init__(self):
-        self.bigram = {'<UNK>'}
+        self.bigram = set()
+        self.unigram = {'<UNK>', '<STOP>', '<START>'}
         self.prob = {}
         
     def fit(self, text_set: list):
         # add start token 
-        token_count = {}
         unigram_count = {}
 
         for sentence in text_set:
-            sentence.append('<STOP>')
-            for j in range(len(sentence) - 1):  # Adjusted range to consider bigrams
-                bigram = (sentence[j], sentence[j + 1])
-                token_count[bigram] = token_count.get(bigram, 0) + 1
-                unigram_count[bigram[0]] = unigram_count.get(bigram[0], 0) + 1
-                self.bigram.add(bigram)
+            for token in sentence:
+                unigram_count[token] = unigram_count.get(token,0) + 1
+                self.unigram.add(token)
+            unigram_count['<STOP>'] = unigram_count.get('<STOP>', 0) + 1
 
-        # add unc token
         unk_value = 0
-        for token in token_count.keys():
-            if token != "<STOP>" and token != "<UNK>" and token_count[token] < 3:
-                self.bigram.remove(token)
-                unk_value += token_count[token]
+        
+        for token in unigram_count.keys():
+            if token != "<STOP>" and unigram_count[token] < 3:
+                self.unigram.remove(token)
+                unk_value += unigram_count[token]
 
         if unk_value > 0:
-            token_count['<UNK>'] = unk_value
+            unigram_count['<UNK>'] = unk_value
+
+        unigram_count['<START>'] = unigram_count['<STOP>']
+        bigram_count = {}
+        
+        for sentence in text_set:
+            sentence.insert(0, '<START>')
+            sentence.append('<STOP>')
+            for j in range(len(sentence) - 1):  # Adjusted range to consider bigrams
+                if sentence[j] in self.unigram:
+                    word_a =  sentence[j]
+                else:
+                    word_a = '<UNK>'
+                
+                if sentence[j+1] in self.unigram:
+                    word_b =  sentence[j+1]
+                else:
+                    word_b = '<UNK>'
+
+                bigram = (word_a, word_b)
+                bigram_count[bigram] = bigram_count.get(bigram, 0) + 1
+                self.bigram.add(bigram)
         
         for word in self.bigram:
-            self.prob[word] = token_count[word] / unigram_count[word[0]]
+            self.prob[word] = bigram_count[word] / unigram_count[word[0]]
 
 
     def transform(self, text: list):
@@ -171,7 +190,8 @@ class BigramFeature(FeatureExtractor):
         feature = {}
 
         unk_value = 0
-
+        text.insert(0, '<START>')
+        text.append("<STOP>")
         for i in range(len(text) - 1):  # Adjusted range to consider bigrams
             bigram = (text[i], text[i + 1])
             if bigram in self.bigram:
@@ -183,7 +203,7 @@ class BigramFeature(FeatureExtractor):
                 unk_value += 1
         
         if unk_value > 0:
-            feature['<UNK>'] = unk_value
+            feature[('UNK','UNK')] = unk_value
 
         return feature
     
