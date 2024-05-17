@@ -28,12 +28,14 @@ def read_data(path):
 
 def main():
     # parse the argument
+    start_time = time.time()
     parser = argparse.ArgumentParser()
     parser.add_argument('--feature', '-f', type=str, default='unigram',
                         choices=['unigram', 'bigram', 'trigram'])
     parser.add_argument('--path', type=str, default='./A2-Data/', help='path to datasets')
     args = parser.parse_args()
     print(args)
+
 
     # obtain the train and test frame
     train_frame, test_frame = read_data(args.path)
@@ -47,11 +49,9 @@ def main():
         model = MaximumLikelihoodEstimateUnigram()
     elif args.feature == "bigram":
         feat_extractor = BigramFeature()
-        feat_extractor_b = UnigramFeature()
         model = MaximumLikelihoodEstimateBigram()
     elif args.feature == "trigram":
         feat_extractor = TrigramFeature()
-        feat_extractor_b = BigramFeature()
         model = MaximumLikelihoodEstimateTrigram()
     else:
         raise Exception("Pass unigram, bigram, or trigram to --feature")
@@ -59,46 +59,21 @@ def main():
     # fit the train tokenized text onto the feature extractor
     feat_extractor.fit(tokenized_text)
 
-    if args.feature != "unigram":
-        feat_extractor_b.fit(tokenized_text)
-
     # obtain train vectors for MLE training
     X_train = feat_extractor.transform_list(tokenized_text)
 
-    if args.feature != "unigram":
-        X_train_b = feat_extractor.transform_list(tokenized_text)
-
-    
-    
     # read the test frame
-    tokenized_text = [tokenize(line) for line in test_frame.readlines()]
-    X_test = feat_extractor.transform_list(tokenized_text)
+    # tokenized_text = [tokenize(line) for line in test_frame.readlines()]
+    # X_test = feat_extractor.transform_list(tokenized_text)
 
     # ---------------------------------------------------------------------------
-    # start the time
-    start_time = time.time()
-    
-    # fit the model
-    if args.feature != 'unigram':
-        model.fit(X_train, X_train_b)
-    else:
-        model.fit(X_train)
-
 
     # output accuracy
     print("===== Unigram Perplexity Score =====")
     with open('test.txt', 'r') as f:
         test_text = [tokenize(line) for line in f.readlines()]
-        test_text[0].append("<STOP>")
-        indices = []
-        for item in test_text[0]:
-            indices.append(feat_extractor.unigram.get(item))
-        print(model.perplexity(indices))
-    
-    #print("===== Test Accuracy =====")
-
-    print("Time for training and test: %.2f seconds" % (time.time() - start_time))
-
+        indices = feat_extractor.transform_list(test_text)
+        print("perplexity:", feat_extractor.perplexity(indices))
 
 
 if __name__ == '__main__':

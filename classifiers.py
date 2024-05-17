@@ -58,6 +58,40 @@ class MaximumLikelihoodEstimateUnigram(BinaryClassifier): # Maximum Likelihood E
 
         data_probabilites = []
         
+        print("takes time here a")
+        #retrieve the probabilities of the data
+        for item in X:
+            data_probabilites.append(self.prob_list[item])
+
+        inv_M = 1/3 # 1/3 because 3 tokens in corpus. Should be changed to variable later
+
+        log_prob = np.log(data_probabilites)
+
+        exponent_l = inv_M * np.sum(log_prob)
+
+        return 2 ** -(exponent_l)
+    
+class MaximumLikelihoodEstimateBigram(BinaryClassifier): # Maximum Likelihood Estimate
+    
+    def __init__(self):
+        self.vocab_size = None
+        self.frequency_list = None
+        self.vocab_size = None
+        self.prob_list = None
+
+    def fit(self, transformed_list_bi, transform_list_uni):
+        sum_list = np.sum(transformed_list_bi, axis = 0)
+
+        self.prob_list = sum_list[:, 0] / sum_list[:, 1]
+        print(prob_list)
+    
+    def perplexity(self, X):
+        # 
+        # X should be tokenized data to get perplextiy score on
+
+        data_probabilites = []
+        
+        print("takes time here a")
         #retrieve the probabilities of the data
         for item in X:
             data_probabilites.append(self.prob_list[item])
@@ -69,15 +103,6 @@ class MaximumLikelihoodEstimateUnigram(BinaryClassifier): # Maximum Likelihood E
         exponent_l = inv_M * np.sum(log_prob)
 
         return 2 ** -(exponent_l)
-    
-class MaximumLikelihoodEstimateBigram(BinaryClassifier): # Maximum Likelihood Estimate
-    
-    def __init__(self):
-        self.frequency_list = None
-
-    def fit(self, transformed_list):
-        return 0
-    
 
 class MaximumLikelihoodEstimateTrigram(BinaryClassifier): # Maximum Likelihood Estimate
     
@@ -86,3 +111,22 @@ class MaximumLikelihoodEstimateTrigram(BinaryClassifier): # Maximum Likelihood E
 
     def fit(self, transformed_list):
         return 0
+
+    def perplexity(self, X):
+        # 
+        # X should be tokenized data to get perplextiy score on
+
+        data_probabilites = []
+        
+        print("takes time here a")
+        #retrieve the probabilities of the data
+        for item in X:
+            data_probabilites.append(self.prob_list[item])
+
+        inv_M = 1/3 # 1/3 because 3 tokens in corpus. Should be changed to variable later
+
+        log_prob = np.log2(data_probabilites)
+
+        exponent_l = inv_M * np.sum(log_prob)
+
+        return 2 ** -(exponent_l)

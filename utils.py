@@ -20,6 +20,10 @@ def tokenize(text, pattern = default_pattern):
     tokens = text.split()
     return tokens
 
+def get_indices(lst, item):
+    arr = np.array(lst)
+    return list(np.where(arr == item)[0])
+
 
 class FeatureExtractor(object):
     """Base class for feature extraction.
@@ -39,7 +43,8 @@ class UnigramFeature(FeatureExtractor):
     """Example code for unigram feature extraction
     """
     def __init__(self):
-        self.unigram = {}
+        self.unigram = {'<UNK>', '<STOP>'}
+        self.prob = {}
         
     def fit(self, text_set: list):
         """Fit a feature extractor based on given data 
@@ -53,24 +58,25 @@ class UnigramFeature(FeatureExtractor):
         for sentence in text_set:
             for token in sentence:
                 token_count[token] = token_count.get(token, 0) + 1
+                self.unigram.add(token)
+            token_count['<STOP>'] = token_count.get('<STOP>', 0) + 1
 
-        index = 0
-        unk_boolean = False
-        # adding unc token
-        for token, count in token_count.items():
-            if count >= 3:
-                self.unigram[token] = index
-                index += 1
-            else:
-                unk_boolean = True
+        unk_value = 0
+        for token in token_count.keys():
+            if token != "<STOP>" and token != "<UNK>" and token_count[token] < 3:
+                self.unigram.remove(token)
+                unk_value += token_count[token]
 
-        if unk_boolean == True:
-            self.unigram['<UNK>'] = index
-            index += 1
-        
-        # add stop token
-        self.unigram["<STOP>"] = index
+        if unk_value > 0:
+            token_count['<UNK>'] = unk_value
 
+        # total words
+        total = 0
+        for word in self.unigram:
+            total += token_count[word]
+
+        for word in self.unigram:
+            self.prob[word] = token_count[word] / total
 
     def transform(self, text: list):
         """Transform a given sentence into vectors based on the extractor you got from self.fit()
@@ -81,14 +87,22 @@ class UnigramFeature(FeatureExtractor):
         Returns:
             array -- an unigram feature array, such as array([1,1,1,0,0]) 
         """
-        feature = np.zeros(len(self.unigram))
+        feature = {'<STOP>': 1}
         # set start token
+        
+        unk_value = 0
 
         for token in text:
-            feature[self.unigram.get(token, self.unigram["<UNK>"])] += 1
+            if token in self.unigram:
+                if token in feature:
+                    feature[token] += 1
+                else:
+                    feature[token] = 1
+            else:
+                unk_value += 1
+        if unk_value > 0:
+            feature['<UNK>'] = unk_value
 
-        # set stop token
-        feature[self.unigram['<STOP>']] = 1
         return feature
     
     def transform_list(self, text_set: list):
@@ -101,63 +115,94 @@ class UnigramFeature(FeatureExtractor):
             array -- unigram feature arraies, such as array([[1,1,1,0,0], [1,0,0,1,1]])
         """
         features = [self.transform(text) for text in text_set]
-        return np.array(features)
-            
+        return features
+    
+
+    def perplexity(self, features):
+        logSum = 0
+        totalWords = 0
+        for line in features:
+            for word in line:
+                logSum += np.log2(line[word] * self.prob[word])
+                totalWords += line[word]
+        print(f"{logSum=}")
+        print(f"{totalWords=}")
+        sol = 2 ** (-logSum/totalWords)
+        
+        return sol
+        
 
 
 class BigramFeature(FeatureExtractor):
 
     def __init__(self):
-        self.bigram = {}
+        self.bigram = {'<UNK>'}
+        self.prob = {}
         
     def fit(self, text_set: list):
         # add start token 
         token_count = {}
+        unigram_count = {}
 
-        index = 0
-
-        for i in range(len(text_set)):
-            for j in range(len(text_set[i]) - 1):  # Adjusted range to consider bigrams
-                bigram = (text_set[i][j], text_set[i][j + 1])
-                if bigram not in self.bigram:
-                    self.bigram[bigram] = index
-                    token_count[bigram] = 1
-                    index += 1
-                else:
-                    token_count[bigram] += 1
+        for sentence in text_set:
+            sentence.append('<STOP>')
+            for j in range(len(sentence) - 1):  # Adjusted range to consider bigrams
+                bigram = (sentence[j], sentence[j + 1])
+                token_count[bigram] = token_count.get(bigram, 0) + 1
+                unigram_count[bigram[0]] = unigram_count.get(bigram[0], 0) + 1
+                self.bigram.add(bigram)
 
         # add unc token
-        for token, count in token_count.items():
-            if count < 3:
-                if self.bigram.get("<UNK>") == None:
-                    self.bigram['<UNK>'] = index
-                    index += 1
-                    self.bigram.pop(token)
-                else:
-                    self.bigram.pop(token)
-        
-        # add stop token
-        self.bigram["<STOP>"] = index
+        unk_value = 0
+        for token in token_count.keys():
+            if token != "<STOP>" and token != "<UNK>" and token_count[token] < 3:
+                self.bigram.remove(token)
+                unk_value += token_count[token]
 
-        index = 0
-        for key in self.bigram.keys():
-            self.bigram[key] = index
-            index += 1
+        if unk_value > 0:
+            token_count['<UNK>'] = unk_value
+        
+        for word in self.bigram:
+            self.prob[word] = token_count[word] / unigram_count[word[0]]
 
 
     def transform(self, text: list):
-        feature = np.zeros(len(self.bigram))
+        # create a 2d numpy array that contains numerator and denominator count of word
+        feature = {}
+
+        unk_value = 0
+
         for i in range(len(text) - 1):  # Adjusted range to consider bigrams
             bigram = (text[i], text[i + 1])
-            feature[self.bigram.get(bigram, self.bigram["<UNK>"])] += 1
+            if bigram in self.bigram:
+                if bigram in feature:
+                    feature[bigram] += 1
+                else:
+                    feature[bigram] = 1
+            else:
+                unk_value += 1
         
-        # set stop token
-        feature[self.bigram['<STOP>']] = 1
+        if unk_value > 0:
+            feature['<UNK>'] = unk_value
+
         return feature
     
     def transform_list(self, text_set: list):
         features = [self.transform(text) for text in text_set]
-        return np.array(features)
+        return features
+
+    def perplexity(self, features):
+        logSum = 0
+        totalWords = 0
+        for line in features:
+            for word in line:
+                logSum += np.log2(line[word] * self.prob[word])
+                totalWords += line[word]
+        print(f"{logSum=}")
+        print(f"{totalWords=}")
+        sol = 2 ** (-logSum/totalWords)
+        
+        return sol
 
 class TrigramFeature(FeatureExtractor):
 
@@ -212,5 +257,5 @@ class TrigramFeature(FeatureExtractor):
     
     def transform_list(self, text_set: list):
         features = [self.transform(text) for text in text_set]
-        return np.array(features)
+        return features
 
