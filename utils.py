@@ -298,7 +298,10 @@ class TrigramFeature(FeatureExtractor):
                 self.trigram.add(trigram)
         
         for word in self.trigram:
-            self.prob[word] = trigram_count[word] / bigram_count[(word[0], word[1])]
+            if word[0] == '<START>' and word[1] == '<START>':
+                self.prob[word] = bigram_count[(word[1],word[2])]/unigram_count[word[1]]
+            else:
+                self.prob[word] = trigram_count[word] / bigram_count[(word[0], word[1])]
 
 
     def transform(self, text: list):
@@ -306,6 +309,7 @@ class TrigramFeature(FeatureExtractor):
         feature = {}
 
         unk_value = 0
+        text.insert(0, '<START>')
         text.insert(0, '<START>')
         text.append("<STOP>")
         for i in range(len(text) - 2):  # Adjusted range to consider bigrams
