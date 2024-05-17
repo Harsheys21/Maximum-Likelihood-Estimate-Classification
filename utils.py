@@ -125,8 +125,8 @@ class UnigramFeature(FeatureExtractor):
             for word in line:
                 logSum += np.log2(line[word] * self.prob[word])
                 totalWords += line[word]
-        print(f"{logSum=}")
-        print(f"{totalWords=}")
+        #print(f"{logSum=}")
+        #print(f"{totalWords=}")
         sol = 2 ** (-logSum/totalWords)
         
         return sol
@@ -218,8 +218,8 @@ class BigramFeature(FeatureExtractor):
             for word in line:
                 logSum += np.log2(line[word] * self.prob[word])
                 totalWords += line[word]
-        print(f"{logSum=}")
-        print(f"{totalWords=}")
+        #print(f"{logSum=}")
+        #print(f"{totalWords=}")
         sol = 2 ** (-logSum/totalWords)
         
         return sol
@@ -338,8 +338,8 @@ class TrigramFeature(FeatureExtractor):
             for word in line:
                 logSum += np.log2(line[word] * self.prob[word])
                 totalWords += line[word]
-        print(f"{logSum=}")
-        print(f"{totalWords=}")
+        #print(f"{logSum=}")
+        #print(f"{totalWords=}")
         sol = 2 ** (-logSum/totalWords)
         
         return sol
