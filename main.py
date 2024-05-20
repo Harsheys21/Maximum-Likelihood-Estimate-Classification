@@ -32,7 +32,7 @@ def main():
     parser.add_argument('--feature', '-f', type=str, default='unigram',
                         choices=['unigram', 'bigram', 'trigram'])
     parser.add_argument('--path', type=str, default='./A2-Data/', help='path to datasets')
-    parser.add_argument('--smoothing', '-s', type=str, default='linear', choices=['linear', 'add1'])
+    parser.add_argument('--smoothing', '-s', type=str, default='None', choices=['linear', 'add1', 'None'])
     args = parser.parse_args()
     print(args)
 
@@ -47,6 +47,10 @@ def main():
     if args.smoothing == "linear":
         interpolation = True
 
+    unigramIndices = None
+    bigramIndices = None
+    trigramIndices = None
+
     # determine which feature extractor to use
     if (interpolation):
         unigramModel = UnigramFeature()
@@ -55,9 +59,9 @@ def main():
         unigramModel.fit(tokenized_text)
         bigramModel.fit(tokenized_text)
         trigramModel.fit(tokenized_text)
-        unigramModel.transform_list(tokenized_text)
-        bigramModel.transform_list(tokenized_text)
-        trigramModel.transform_list(tokenized_text)
+        unigramIndices = unigramModel.transform_list(tokenized_text)
+        bigramIndices = bigramModel.transform_list(tokenized_text)
+        trigramIndices = trigramModel.transform_list(tokenized_text)
     else:
         if args.feature == "unigram":
             feat_extractor = UnigramFeature()
@@ -70,44 +74,68 @@ def main():
     
     
 
-    # fit the train tokenized text onto the feature extractor
-    feat_extractor.fit(tokenized_text)
+        # fit the train tokenized text onto the feature extractor
+        feat_extractor.fit(tokenized_text)
 
-    # obtain train vectors for MLE training
-    X_train = feat_extractor.transform_list(tokenized_text)
+        # obtain train vectors for MLE training
+        X_train = feat_extractor.transform_list(tokenized_text)
 
-    # ---------------------------------------------------------------------------
+        # ---------------------------------------------------------------------------
 
-    test = True #change value to enable/disable hdtv . test file
+        test = True #change value to enable/disable hdtv . test file
 
-    # if (test):
-    #     with open('test.txt', 'r') as f:
-    #         test_text = [tokenize(line) for line in f.readlines()]
-    #         indices = feat_extractor.transform_list(test_text)
-    #         print("train perplexity:", feat_extractor.perplexity(indices))
-    #         return
-    # output accuracy
-    print("===== %s Perplexity Scores =====" % args.feature)
-    with open('data/1b_benchmark.train.tokens', 'r') as f:
-        test_text = [tokenize(line) for line in f.readlines()]
-        indices = feat_extractor.transform_list(test_text)
-        print("train perplexity:", feat_extractor.perplexity(indices))
+        if (test):
+            with open('test.txt', 'r') as f:
+                test_text = [tokenize(line) for line in f.readlines()]
+                indices = feat_extractor.transform_list(test_text)
+                print("train perplexity:", feat_extractor.perplexity(indices))
+                return
+        # output accuracy
+        print("===== %s Perplexity Scores =====" % args.feature)
+        with open('data/1b_benchmark.train.tokens', 'r') as f:
+            test_text = [tokenize(line) for line in f.readlines()]
+            indices = feat_extractor.transform_list(test_text)
+            print("train perplexity:", feat_extractor.perplexity(indices))
 
-    with open('data/1b_benchmark.dev.tokens', 'r') as f:
-        test_text = [tokenize(line) for line in f.readlines()]
-        indices = feat_extractor.transform_list(test_text)
-        print("dev perplexity:", feat_extractor.perplexity(indices))
+        with open('data/1b_benchmark.dev.tokens', 'r') as f:
+            test_text = [tokenize(line) for line in f.readlines()]
+            indices = feat_extractor.transform_list(test_text)
+            print("dev perplexity:", feat_extractor.perplexity(indices))
 
-    with open('data/1b_benchmark.test.tokens', 'r') as f: # ONLY UNCOMMENT ON FINAL RUN
-         test_text = [tokenize(line) for line in f.readlines()]
-         indices = feat_extractor.transform_list(test_text)
-         print("test perplexity:", feat_extractor.perplexity(indices))
+        with open('data/1b_benchmark.test.tokens', 'r') as f: # ONLY UNCOMMENT ON FINAL RUN
+            test_text = [tokenize(line) for line in f.readlines()]
+            indices = feat_extractor.transform_list(test_text)
+            print("test perplexity:", feat_extractor.perplexity(indices))
 
     if (interpolation):
-        y1 = 0.6
-        y2 = 0.2
-        y3 = 0.2
-        print("===== Linear Interpolation Perplexity Scores =====")
+        y1 = 0.1
+        y2 = 0.3
+        y3 = 0.6
+        print("===== Linear Interpolation Perplexity Score =====")
+        with open('test.txt', 'r') as f:
+            test_text = [tokenize(line) for line in f.readlines()]
+            indices = trigramModel.transform_list(test_text)
+
+            #perplexity for lienar interpolation
+            sum = 0
+            totalWords = 0
+            skip1 = 1
+            for sentence in indices:
+                for word in sentence:
+                    if word == ('<START>', '<START>', '<START>'):
+                        continue
+                    if word[1:] == ('<STOP>', '<STOP>'):
+                        pass
+                    sum += np.log2(sentence[word] * ((y1 * unigramModel.prob[word[2]]) + (y2 * bigramModel.prob[word[1:]]) + (y3 * trigramModel.prob[word] )))
+                    totalWords += sentence[word]
+                    #print("word:", word[2], word[1:], word)
+                    # return
+                #skip1 = 1
+                #return
+            #print("total words:", totalWords)
+            val = 2 ** (-sum/totalWords)
+
+            print("test perplexity:", val)
 
 
 
