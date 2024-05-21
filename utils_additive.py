@@ -6,7 +6,7 @@ import re
 default_pattern =  r'\s+'
 
 # additive smoothing value
-smoothing = 0.1
+smoothing = 0.0000001
 
 def tokenizea1(text, pattern = default_pattern):
     """Tokenize senten with specific pattern

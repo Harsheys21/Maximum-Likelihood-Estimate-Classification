@@ -14,4 +14,6 @@ See command line options below:
     Choices: "none", "add1", "linear"
 ```
 
-By default, runs unigram model with no smoothing
+By default, runs unigram model with no smoothing.
+Please note that linear interpolation overrides the feature flag. Linear
+Interpolation only works with the trigram model.

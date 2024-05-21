@@ -96,7 +96,7 @@ def main():
 
         # ---------------------------------------------------------------------------
 
-        test = True #change value to enable/disable hdtv . test file
+        test = False #change value to enable/disable hdtv . test file
 
         if (test):
             with open('test.txt', 'r') as f:
@@ -133,7 +133,6 @@ def main():
             #perplexity for lienar interpolation
             sum = 0
             totalWords = 0
-            skip1 = 1
             for sentence in indices:
                 for word in sentence:
                     if word == ('<START>', '<START>', '<START>'):
@@ -142,11 +141,6 @@ def main():
                         pass
                     sum += np.log2(sentence[word] * ((y1 * unigramModel.prob[word[2]]) + (y2 * bigramModel.prob[word[1:]]) + (y3 * trigramModel.prob[word] )))
                     totalWords += sentence[word]
-                    #print("word:", word[2], word[1:], word)
-                    # return
-                #skip1 = 1
-                #return
-            #print("total words:", totalWords)
             val = 2 ** (-sum/totalWords)
 
             print("test perplexity:", val)
