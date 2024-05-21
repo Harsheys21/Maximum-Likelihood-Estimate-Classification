@@ -8,7 +8,7 @@ default_pattern =  r'\s+'
 # additive smoothing value
 smoothing = 0.1
 
-def tokenize(text, pattern = default_pattern):
+def tokenizea1(text, pattern = default_pattern):
     """Tokenize senten with specific pattern
     
     Arguments:
@@ -23,12 +23,12 @@ def tokenize(text, pattern = default_pattern):
     tokens = text.split()
     return tokens
 
-def get_indices(lst, item):
+def get_indicesa1(lst, item):
     arr = np.array(lst)
     return list(np.where(arr == item)[0])
 
 
-class FeatureExtractor(object):
+class FeatureExtractora1(object):
     """Base class for feature extraction.
     """
     def __init__(self):
@@ -42,7 +42,7 @@ class FeatureExtractor(object):
 
 
 
-class UnigramFeature(FeatureExtractor):
+class UnigramFeaturea1(FeatureExtractora1):
     """Example code for unigram feature extraction
     """
     def __init__(self):
@@ -138,7 +138,7 @@ class UnigramFeature(FeatureExtractor):
         
 
 
-class BigramFeature(FeatureExtractor):
+class BigramFeaturea1(FeatureExtractora1):
 
     def __init__(self):
         self.bigram = set()
@@ -230,7 +230,7 @@ class BigramFeature(FeatureExtractor):
         
         return val
 
-class TrigramFeature(FeatureExtractor):
+class TrigramFeaturea1(FeatureExtractora1):
 
     def __init__(self):
         self.trigram = set()

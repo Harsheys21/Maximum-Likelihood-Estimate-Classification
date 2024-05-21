@@ -1,5 +1,6 @@
 import pandas as pd
 from utils import *
+from utils_additive import *
 import numpy as np
 import time
 import argparse
@@ -46,6 +47,10 @@ def main():
     interpolation = False
     if args.smoothing == "linear":
         interpolation = True
+    
+    additive = False
+    if args.smoothing == "add1":
+        additive = True
 
     unigramIndices = None
     bigramIndices = None
@@ -64,11 +69,20 @@ def main():
         trigramIndices = trigramModel.transform_list(tokenized_text)
     else:
         if args.feature == "unigram":
-            feat_extractor = UnigramFeature()
+            if additive:
+                feat_extractor = UnigramFeaturea1()
+            else:
+                feat_extractor = UnigramFeature()
         elif args.feature == "bigram":
-            feat_extractor = BigramFeature()
+            if additive:
+                feat_extractor = BigramFeaturea1()
+            else:
+                feat_extractor = BigramFeature()
         elif args.feature == "trigram":
-            feat_extractor = TrigramFeature()
+            if additive:
+                feat_extractor = TrigramFeaturea1()
+            else:
+                feat_extractor = TrigramFeature()
         else:
             raise Exception("Pass unigram, bigram, or trigram to --feature")
     
