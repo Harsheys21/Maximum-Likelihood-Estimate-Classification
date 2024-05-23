@@ -122,11 +122,34 @@ def main():
             print("test perplexity:", feat_extractor.perplexity(indices))
 
     if (interpolation):
-        y1 = 0.1
-        y2 = 0.3
-        y3 = 0.6
-        print("===== Linear Interpolation Perplexity Score =====")
-        with open('test.txt', 'r') as f:
+        y1 = .1
+        y2 = .3
+        y3 = .6
+
+        test = False #change value to enable/disable hdtv . test file
+
+        print("===== Linear Interpolation Perplexity Score %.1f %.1f %.1f =====" % (y1, y2, y3))
+        if (test):
+            with open('test.txt', 'r') as f:
+                test_text = [tokenize(line) for line in f.readlines()]
+                indices = trigramModel.transform_list(test_text)
+
+                #perplexity for lienar interpolation
+                sum = 0
+                totalWords = 0
+                for sentence in indices:
+                    for word in sentence:
+                        if word == ('<START>', '<START>', '<START>'):
+                            continue
+                        if word[1:] == ('<STOP>', '<STOP>'):
+                            pass
+                        sum += np.log2(sentence[word] * ((y1 * unigramModel.prob[word[2]]) + (y2 * bigramModel.prob[word[1:]]) + (y3 * trigramModel.prob[word] )))
+                        totalWords += sentence[word]
+                val = 2 ** (-sum/totalWords)
+
+                print("test perplexity:", val)
+        
+        with open('data/1b_benchmark.train.tokens', 'r') as f:
             test_text = [tokenize(line) for line in f.readlines()]
             indices = trigramModel.transform_list(test_text)
 
@@ -143,7 +166,47 @@ def main():
                     totalWords += sentence[word]
             val = 2 ** (-sum/totalWords)
 
-            print("test perplexity:", val)
+            print("train perplexity:", val)
+
+        with open('data/1b_benchmark.dev.tokens', 'r') as f:
+            test_text = [tokenize(line) for line in f.readlines()]
+            indices = trigramModel.transform_list(test_text)
+
+            #perplexity for lienar interpolation
+            sum = 0
+            totalWords = 0
+            for sentence in indices:
+                for word in sentence:
+                    if word == ('<START>', '<START>', '<START>'):
+                        continue
+                    if word[1:] == ('<STOP>', '<STOP>'):
+                        pass
+                    sum += np.log2(sentence[word] * ((y1 * unigramModel.prob[word[2]]) + (y2 * bigramModel.prob[word[1:]]) + (y3 * trigramModel.prob[word] )))
+                    totalWords += sentence[word]
+            val = 2 ** (-sum/totalWords)
+
+            print("dev perplexity:", val)
+        
+        with open('data/1b_benchmark.test.tokens', 'r') as f: # ONLY UNCOMMENT ON FINAL RUN
+            test_text = [tokenize(line) for line in f.readlines()]
+            indices = trigramModel.transform_list(test_text)
+
+            #perplexity for lienar interpolation
+            sum = 0
+            totalWords = 0
+            for sentence in indices:
+                for word in sentence:
+                    if word == ('<START>', '<START>', '<START>'):
+                        continue
+                    if word[1:] == ('<STOP>', '<STOP>'):
+                        pass
+                    sum += np.log2(sentence[word] * ((y1 * unigramModel.prob[word[2]]) + (y2 * bigramModel.prob[word[1:]]) + (y3 * trigramModel.prob[word] )))
+                    totalWords += sentence[word]
+            val = 2 ** (-sum/totalWords)
+
+            print("train perplexity:", val)
+        
+
 
 
 
